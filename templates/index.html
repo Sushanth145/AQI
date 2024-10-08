@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AQI Prediction</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 20px;
+            color: #333;
+            display: flex;
+            flex-direction: column;
+            align-items: center; /* Center contents horizontally */
+        }
+        
+        h1 {
+            text-align: center;
+            color: #2c3e50;
+        }
+        
+        form {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin: 20px 0;
+        }
+
+        input[type="file"] {
+            margin-bottom: 10px;
+        }
+
+        input[type="submit"] {
+            padding: 10px 15px;
+            font-size: 16px;
+            background-color: #3498db;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        input[type="submit"]:hover {
+            background-color: #2980b9;
+        }
+
+        #result {
+            margin-top: 20px;
+            text-align: center;
+        }
+
+        .error {
+            color: red;
+        }
+
+        .success {
+            color: green;
+        }
+
+        #uploaded-image {
+            margin-top: 20px;
+            max-width: 100%;
+            height: auto;
+            display: none; /* Initially hidden */
+            border: 2px solid #3498db; /* Optional: Add a border */
+            border-radius: 5px; /* Optional: Add rounded corners */
+        }
+
+        /* Center the image container */
+        .image-container {
+            display: flex;
+            justify-content: center; /* Center image horizontally */
+            align-items: center; /* Center image vertically */
+            width: 100%; /* Full width */
+        }
+    </style>
+</head>
+<body>
+    <h1>AQI Prediction from Image</h1>
+    <form action="/predict" method="post" enctype="multipart/form-data">
+        <input type="file" id="file-input" name="file" accept="image/*" required>
+        <input type="submit" value="Upload and Predict">
+    </form>
+
+    <div id="result"></div>
+    <div class="image-container">
+        <img id="uploaded-image" src="" alt="Uploaded Image">
+    </div>
+
+    <script>
+        const form = document.querySelector('form');
+        const resultDiv = document.getElementById('result');
+        const uploadedImage = document.getElementById('uploaded-image');
+        const fileInput = document.getElementById('file-input');
+
+        // Event listener to display the uploaded image immediately
+        fileInput.addEventListener('change', function(event) {
+            const file = event.target.files[0]; // Get the selected file
+            const reader = new FileReader(); // Create a new FileReader object
+
+            reader.onload = function(e) {
+                uploadedImage.src = e.target.result; // Set the image source to the uploaded file
+                uploadedImage.style.display = 'block'; // Show the image
+            }
+            reader.readAsDataURL(file); // Read the file as a data URL
+        });
+
+        form.onsubmit = async function(event) {
+            event.preventDefault();
+            
+            const formData = new FormData(form);
+            
+            const response = await fetch('/predict', {
+                method: 'POST',
+                body: formData
+            });
+            
+            const data = await response.json();
+            
+            if (data.error) {
+                resultDiv.innerHTML = `<p class="error">${data.error}</p>`;
+            } else {
+                resultDiv.innerHTML = `<h2 class="success">Predicted AQI: ${data.predicted_aqi}</h2>`;
+            }
+        };
+    </script>
+</body>
+</html>
